@@ -8,15 +8,69 @@ output:
 
 ## Loading and preprocessing the data
 
+Information is zipped into a file, so first is necesary to unzip the data and then save de dataset.
+```{r, echo=TRUE}
+#unzip de file
+unzip("activity.zip")
 
+#saving dataset as "dataset"
+dataset <- read.csv("activity.csv")
+head(dataset)
+summary(dataset)
+```
+
+Setting date column to date format
+```{r, echo=TRUE}
+dataset$date <- as.Date(as.character(dataset$date), format = "%Y-%m-%d")
+head(dataset)
+```
+
+Exploring data without NAs
+```{r, echo=TRUE}
+datasetna <- dataset[complete.cases(dataset),]
+head(datasetna)
+```
 
 ## What is mean total number of steps taken per day?
+First of all, I'll aggregate datasetna by summing steps by date and save the results to "aggdata"  in order to prepare de data to build a histogra and calculate de mean and median.
+```{r, echo=TRUE}
+aggdata <- aggregate(datasetna$steps, by = list(datasetna$date), sum)
+names(aggdata)[1] = "Date"
+names(aggdata)[2] = "Total Steps"
+head(aggdata, 10)
+```
 
+Ploting a histogram
 
+```{r, echo=TRUE}
+library(ggplot2)
+hist1 <- ggplot(aggdata, aes(x = `Total Steps`)) + geom_histogram(fill = "darkred", binwidth=2000) + labs(title = "Total Steps per day", x = "Steps", y = "Count")
+
+hist1
+```
+
+Calculating the mean and median
+```{r, echo=TRUE}
+paste("the mean is ", mean(aggdata$`Total Steps`))
+paste("the median is ", median(aggdata$`Total Steps`))
+
+```
 
 ## What is the average daily activity pattern?
+In order to get the data prepared to build the timeseries is necesary to get the average of steps by intervale. I've used the aggregate function to have this.
+```{r, echo=TRUE}
+avrgsteps <- aggregate(datasetna$steps, by = list(datasetna$interval), mean)
+names(avrgsteps)[1] = "Interval"
+names(avrgsteps)[2] = "Steps"
+head(avrgsteps, 10)
+```
 
+Build the time series using ggplot (previusly imported)
+```{r}
+timeserie <- ggplot(avrgsteps, aes(x = Interval, y = Steps)) + geom_line(color = "darkred") + labs(title = "Timeserie: Steps by Interval", x = "5-min Interval", y = "Steps Avrg")
 
+timeserie
+```
 
 ## Imputing missing values
 
