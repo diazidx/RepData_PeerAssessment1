@@ -4,7 +4,7 @@ output:
   html_document:
     keep_md: true
 ---
-
+Author: I. Diaz
 
 ## Loading and preprocessing the data
 
@@ -34,9 +34,7 @@ head(datasetna)
 ## What is mean total number of steps taken per day?
 First of all, I'll aggregate datasetna by summing steps by date and save the results to "aggdata"  in order to prepare de data to build a histogra and calculate de mean and median.
 ```{r, echo=TRUE}
-aggdata <- aggregate(datasetna$steps, by = list(datasetna$date), sum)
-names(aggdata)[1] = "Date"
-names(aggdata)[2] = "Total Steps"
+aggdata <- aggregate(steps ~ date, data = datasetna, FUN = sum)
 head(aggdata, 10)
 ```
 
@@ -44,36 +42,67 @@ Ploting a histogram
 
 ```{r, echo=TRUE}
 library(ggplot2)
-hist1 <- ggplot(aggdata, aes(x = `Total Steps`)) + geom_histogram(fill = "darkred", binwidth=2000) + labs(title = "Total Steps per day", x = "Steps", y = "Count")
+hist1 <- ggplot(aggdata, aes(x = steps)) + geom_histogram(fill = "darkred", binwidth=2000) + labs(title = "Total Steps per day", x = "Steps", y = "Count")
 
 hist1
 ```
 
 Calculating the mean and median
 ```{r, echo=TRUE}
-paste("the mean is ", mean(aggdata$`Total Steps`))
-paste("the median is ", median(aggdata$`Total Steps`))
-
+paste("the mean is ", mean(aggdata$steps))
+paste("the median is ", median(aggdata$steps))
 ```
 
 ## What is the average daily activity pattern?
-In order to get the data prepared to build the timeseries is necesary to get the average of steps by intervale. I've used the aggregate function to have this.
+In order to get the data prepared and build the timeserie is necesary to get the average of steps by intervale. I've used the aggregate function to have this.
 ```{r, echo=TRUE}
-avrgsteps <- aggregate(datasetna$steps, by = list(datasetna$interval), mean)
-names(avrgsteps)[1] = "Interval"
-names(avrgsteps)[2] = "Steps"
+avrgsteps <- aggregate(steps ~ interval, data = datasetna, FUN = mean)
 head(avrgsteps, 10)
 ```
 
-Build the time series using ggplot (previusly imported)
-```{r}
-timeserie <- ggplot(avrgsteps, aes(x = Interval, y = Steps)) + geom_line(color = "darkred") + labs(title = "Timeserie: Steps by Interval", x = "5-min Interval", y = "Steps Avrg")
+Build the time series using
+```{r, echo=TRUE}
+timeserie <- ggplot(avrgsteps, aes(x = interval, y = steps)) + geom_line(color = "darkred") + labs(title = "Timeserie: Steps by Interval", x = "5-min Interval", y = "Steps Avrg")
 
 timeserie
 ```
 
-## Imputing missing values
+To calculate the max value I'll use de previous set "avrgsteps" I created, because it contains the average number of step for every 5-min interval.
 
+```{r, echo=TRUE}
+avrgsteps[which(avrgsteps$steps == max(avrgsteps$steps)),]
+```
+
+## Imputing missing values
+Accordingly to the summary function previously used to the original dataset, the number of NAs is 2304.
+
+I'll try to process the empty values in order to check if this take effect to the final result. NAs will be replace with the mean.
+```{r, echo=TRUE}
+#calculating the mean value
+meanvalue <- mean(datasetna$steps)
+meanvalue
+
+#replacing NAs with the mean in the "steps" column
+datasetnona <- dataset
+nas <- is.na(dataset$steps)
+datasetnona$steps[nas] <- meanvalue
+summary(datasetnona)
+```
+
+Build a histogram
+```{r, echo=TRUE}
+aggdata2 <- aggregate(steps ~ date, data = datasetnona, FUN = sum)
+hist2 <- ggplot(aggdata2, aes(x = steps)) + geom_histogram(fill = "darkblue", binwidth=2000) + labs(title = "Total Steps per day", x = "Steps", y = "Count")
+
+hist2
+```
+
+Calculate the mean and the median of the de data aggregated
+
+```{r, echo=TRUE}
+paste("the mean is ", mean(aggdata2$steps))
+paste("the median is ", median(aggdata2$steps))
+```
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
