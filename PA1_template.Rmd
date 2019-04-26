@@ -104,5 +104,34 @@ paste("the mean is ", mean(aggdata2$steps))
 paste("the median is ", median(aggdata2$steps))
 ```
 
+If we see there is no significant impact of the in the values repect the original dataset, just in case of the median because of the 2304 NAs that not exist anymore and center value changed.
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+I'll create a new variable call "weekd" and call the weekday using the weekday() function. Then if weekd is not weekend store 1 in the "weekdclasif" variable and 0 if it's weekend. 
+```{r, echo=TRUE}
+datasetnona2 <- datasetnona
+datasetnona2["weekd"] <- weekdays(datasetnona2$date)
+# assign weekdays to 1 and weekend to 0 and save the values to "weekdclasif"
+datasetnona2$weekdclasif <- ifelse(datasetnona2$weekd == "Saturday"  | datasetnona2$weekd == "Sunday", "weekend", "weekday")
+tail(datasetnona2,5)
+```
+
+Is necessary to prepare the dataset and then build the plot in order to compare how is the variation of the steps on weekdays and weekend.
+```{r, echo=TRUE}
+aggdata3 <- aggregate(datasetnona2$steps, by=list(datasetnona2$weekdclasif, datasetnona2$interval), mean)
+names(aggdata3)[1]  = "weekd"
+names(aggdata3)[2] = "interval"
+names(aggdata3)[3] = "meansteps"
+
+head(aggdata3)
+```
+Buils de plot using ggplot
+
+```{r, echo=TRUE}
+timeserie2 <- ggplot(data = aggdata3, aes(x=interval, y=meansteps, color=weekd)) + facet_grid(weekd ~ .) + geom_line() + labs(title = "Steps by 5-min Interval, Classified by Weekday", x= "Interval", y="Avrg Steps")
+
+timeserie2
+```
+
+Looks like during the weekend is more common to have more steps.
